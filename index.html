@@ -109,9 +109,7 @@
         <input placeholder="Grade" class="border p-2 col-span-1" />
         <input placeholder="Shipper" class="border p-2 col-span-1 shipper-input" />
         <input placeholder="Quantity" class="border p-2 col-span-1" />
-        <select class="border p-2 col-span-1">
-          ${[...Array(12).keys()].map(i => `<option>${new Date(0, i).toLocaleString('default', { month: 'long' })}</option>`).join('')}
-        </select>
+        <input placeholder="Period" class="border p-2 col-span-1" />
         <input placeholder="Price" class="border p-2 col-span-1" />
       `;
       container.appendChild(div);
@@ -159,7 +157,7 @@
 
       for (let i = 0; i < entryCount; i++) {
         const row = document.getElementById('entry-' + i);
-        const cells = row.querySelectorAll('input, select');
+        const cells = row.querySelectorAll('input');
         const rowData = Array.from(cells).map(c => c.style.display === 'none' ? null : c.value);
         const tr = document.createElement('tr');
         rowData.forEach((data, index) => {
