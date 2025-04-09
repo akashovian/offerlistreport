@@ -13,9 +13,31 @@
       justify-content: center;
       margin: 0 auto;
     }
-    .table-cell {
-      vertical-align: middle !important;
-      text-align: center !important;
+    /* Improved table styling for both screen and PDF */
+    .pdf-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    .pdf-table th {
+      background-color: #047857; /* Tailwind green-700 */
+      color: white;
+      padding: 10px;
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 600;
+    }
+    .pdf-table td {
+      padding: 10px;
+      border: 1px solid #e5e7eb; /* Tailwind gray-200 */
+      text-align: center;
+      vertical-align: middle;
+    }
+    .pdf-table tr:nth-child(even) {
+      background-color: #f9fafb; /* Tailwind gray-50 */
+    }
+    .pdf-table tr:hover {
+      background-color: #f3f4f6; /* Tailwind gray-100 */
     }
   </style>
 </head>
@@ -60,26 +82,26 @@
 
     <!-- Rendered Table -->
     <div id="offerListSection" class="mt-10 hidden">
-      <div id="pdfContent" class="p-4 border rounded">
+      <div id="pdfContent" class="p-4 border rounded bg-white">
         <div class="center-logo">
           <img id="logoImage" src="logo.png" alt="Logo" style="width: 300px;"/>
         </div>
         <h2 class="text-xl font-bold mt-2 text-center">Offer List</h2>
-        <p id="dateDisplay" class="mb-4 text-center"></p>
+        <p id="dateDisplay" class="mb-4 text-center text-gray-600"></p>
 
-        <p class="mb-2 italic text-center">Subject to reconfirmation, we offer the following:</p>
+        <p class="mb-4 italic text-center text-gray-700">Subject to reconfirmation, we offer the following:</p>
         <div class="overflow-x-auto">
-          <table id="offerTable" class="min-w-full text-sm border border-black">
-            <thead class="bg-green-700 text-white">
+          <table id="offerTable" class="pdf-table">
+            <thead>
               <tr id="tableHeaderRow"></tr>
             </thead>
-            <tbody id="tableBody" class="bg-white text-black"></tbody>
+            <tbody id="tableBody"></tbody>
           </table>
         </div>
 
-        <p class="mt-4 text-center">We look forward to your firm interest.</p>
+        <p class="mt-6 text-center text-gray-700">We look forward to your firm interest.</p>
 
-        <div class="mt-6 text-sm leading-relaxed text-center">
+        <div class="mt-8 text-sm leading-relaxed text-center text-gray-600">
           <p>Thanks & Regards,</p>
           <p><strong>VE Ovian</strong><br>
           Indcaffe - International Coffee Brokers<br>
@@ -165,7 +187,7 @@
 
     function generateOfferList() {
       const date = document.getElementById('offerDate').value;
-      document.getElementById('dateDisplay').textContent = date;
+      document.getElementById('dateDisplay').textContent = date ? new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
       const includeShipper = document.querySelector('input[name="includeShipper"]:checked').value === 'yes';
       const headerRow = document.getElementById('tableHeaderRow');
@@ -176,7 +198,6 @@
       const headers = ['Quality', 'Grade', ...(includeShipper ? ['Shipper'] : []), 'Quantity', 'Shipment Period', 'Price'];
       headers.forEach(header => {
         const th = document.createElement('th');
-        th.className = 'border px-2 py-1 table-cell';
         th.textContent = header;
         headerRow.appendChild(th);
       });
@@ -189,7 +210,6 @@
         rowData.forEach((data, index) => {
           if (!includeShipper && index === 2) return;
           const td = document.createElement('td');
-          td.className = 'border px-2 py-1 table-cell';
           td.textContent = data;
           tr.appendChild(td);
         });
@@ -204,13 +224,28 @@
       const doc = new jsPDF();
       const content = document.getElementById('pdfContent');
       
-      // Set table cell styles for PDF
+      // Apply PDF-specific styles
       const table = document.getElementById('offerTable');
       const cells = table.querySelectorAll('th, td');
       cells.forEach(cell => {
-        cell.style.padding = '5px';
+        cell.style.padding = '8px';
         cell.style.textAlign = 'center';
         cell.style.verticalAlign = 'middle';
+        cell.style.border = '1px solid #e5e7eb';
+      });
+
+      // Header row styling
+      const headerCells = table.querySelectorAll('th');
+      headerCells.forEach(cell => {
+        cell.style.backgroundColor = '#047857';
+        cell.style.color = 'white';
+        cell.style.fontWeight = '600';
+      });
+
+      // Alternate row coloring
+      const rows = table.querySelectorAll('tr:nth-child(even)');
+      rows.forEach(row => {
+        row.style.backgroundColor = '#f9fafb';
       });
 
       // Load the image first to avoid tainted canvas
@@ -228,7 +263,8 @@
         scale: 2,
         logging: false,
         useCORS: true,
-        allowTaint: false
+        allowTaint: false,
+        backgroundColor: '#ffffff'
       });
 
       const imgData = canvas.toDataURL('image/png');
