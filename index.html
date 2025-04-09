@@ -13,31 +13,39 @@
       justify-content: center;
       margin: 0 auto;
     }
-    /* Improved table styling for both screen and PDF */
-    .pdf-table {
+    /* Table styling that will be preserved in PDF */
+    #offerTable {
       width: 100%;
       border-collapse: collapse;
       margin: 1rem 0;
     }
-    .pdf-table th {
+    #offerTable th {
       background-color: #047857; /* Tailwind green-700 */
       color: white;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
       vertical-align: middle;
       font-weight: 600;
+      border: 1px solid #e5e7eb;
     }
-    .pdf-table td {
-      padding: 10px;
-      border: 1px solid #e5e7eb; /* Tailwind gray-200 */
+    #offerTable td {
+      padding: 8px;
+      border: 1px solid #e5e7eb;
       text-align: center;
       vertical-align: middle;
     }
-    .pdf-table tr:nth-child(even) {
+    #offerTable tr:nth-child(even) {
       background-color: #f9fafb; /* Tailwind gray-50 */
     }
-    .pdf-table tr:hover {
+    #offerTable tr:hover {
       background-color: #f3f4f6; /* Tailwind gray-100 */
+    }
+    /* Ensure PDF container matches screen exactly */
+    #pdfContent {
+      background: white;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
     }
   </style>
 </head>
@@ -82,16 +90,16 @@
 
     <!-- Rendered Table -->
     <div id="offerListSection" class="mt-10 hidden">
-      <div id="pdfContent" class="p-4 border rounded bg-white">
-        <div class="center-logo">
+      <div id="pdfContent" class="border rounded bg-white">
+        <div class="center-logo p-4">
           <img id="logoImage" src="logo.png" alt="Logo" style="width: 300px;"/>
         </div>
         <h2 class="text-xl font-bold mt-2 text-center">Offer List</h2>
         <p id="dateDisplay" class="mb-4 text-center text-gray-600"></p>
 
-        <p class="mb-4 italic text-center text-gray-700">Subject to reconfirmation, we offer the following:</p>
-        <div class="overflow-x-auto">
-          <table id="offerTable" class="pdf-table">
+        <p class="mb-4 italic text-center text-gray-700 px-4">Subject to reconfirmation, we offer the following:</p>
+        <div class="overflow-x-auto px-4">
+          <table id="offerTable" class="min-w-full">
             <thead>
               <tr id="tableHeaderRow"></tr>
             </thead>
@@ -99,9 +107,9 @@
           </table>
         </div>
 
-        <p class="mt-6 text-center text-gray-700">We look forward to your firm interest.</p>
+        <p class="mt-6 text-center text-gray-700 px-4">We look forward to your firm interest.</p>
 
-        <div class="mt-8 text-sm leading-relaxed text-center text-gray-600">
+        <div class="mt-8 text-sm leading-relaxed text-center text-gray-600 p-4">
           <p>Thanks & Regards,</p>
           <p><strong>VE Ovian</strong><br>
           Indcaffe - International Coffee Brokers<br>
@@ -221,69 +229,53 @@
 
     async function exportPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
       const content = document.getElementById('pdfContent');
       
-      // Apply PDF-specific styles
-      const table = document.getElementById('offerTable');
-      const cells = table.querySelectorAll('th, td');
-      cells.forEach(cell => {
-        cell.style.padding = '8px';
-        cell.style.textAlign = 'center';
-        cell.style.verticalAlign = 'middle';
-        cell.style.border = '1px solid #e5e7eb';
-      });
-
-      // Header row styling
-      const headerCells = table.querySelectorAll('th');
-      headerCells.forEach(cell => {
-        cell.style.backgroundColor = '#047857';
-        cell.style.color = 'white';
-        cell.style.fontWeight = '600';
-      });
-
-      // Alternate row coloring
-      const rows = table.querySelectorAll('tr:nth-child(even)');
-      rows.forEach(row => {
-        row.style.backgroundColor = '#f9fafb';
-      });
-
-      // Load the image first to avoid tainted canvas
-      const logo = document.getElementById('logoImage');
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.src = logo.src;
-
-      await new Promise((resolve) => {
-        img.onload = resolve;
-      });
-
-      // Use html2canvas with proper configuration
+      // Temporarily hide the export button for the screenshot
+      const exportButton = document.querySelector('#offerListSection button');
+      const originalDisplay = exportButton.style.display;
+      exportButton.style.display = 'none';
+      
+      // Use html2canvas with precise configuration
       const canvas = await html2canvas(content, {
-        scale: 2,
+        scale: 2, // Higher scale for better quality
         logging: false,
         useCORS: true,
         allowTaint: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: content.scrollWidth,
+        windowHeight: content.scrollHeight
       });
-
+      
+      // Restore the export button
+      exportButton.style.display = originalDisplay;
+      
       const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 190;
-      const pageHeight = 295;
+      const imgWidth = 190; // A4 width - margins
+      const pageHeight = 277; // A4 height - margins
       const imgHeight = canvas.height * imgWidth / canvas.width;
       let heightLeft = imgHeight;
-      let position = 10;
-
+      let position = 10; // Top margin
+      
       doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-
+      
+      // Add new pages if content is longer than one page
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         doc.addPage();
         doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-
+      
       doc.save('Offer_List.pdf');
     }
   </script>
