@@ -50,7 +50,8 @@
       <!-- JS will insert entries here -->
     </div>
     <button onclick="addEntry()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded mr-2">Add Quality</button>
-    <button onclick="removeEntry()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Remove Last</button>
+    <button onclick="removeEntry()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mr-2">Remove Last</button>
+    <button onclick="duplicateEntry()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Duplicate Offer</button>
 
     <!-- Generate button -->
     <div class="mt-6">
@@ -121,6 +122,31 @@
       if (entryCount > 0) {
         entryCount--;
         document.getElementById('entry-' + entryCount).remove();
+      }
+    }
+
+    function duplicateEntry() {
+      if (entryCount > 0) {
+        const lastEntry = document.getElementById('entry-' + (entryCount - 1));
+        const inputs = lastEntry.querySelectorAll('input');
+        const values = Array.from(inputs).map(input => input.value);
+        
+        const container = document.getElementById('entries');
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-6 gap-4 items-end';
+        div.id = 'entry-' + entryCount;
+
+        div.innerHTML = `
+          <input placeholder="Quality" class="border p-2 col-span-1" value="${values[0]}" />
+          <input placeholder="Grade" class="border p-2 col-span-1" value="${values[1]}" />
+          <input placeholder="Shipper" class="border p-2 col-span-1 shipper-input" value="${values[2]}" />
+          <input placeholder="Quantity" class="border p-2 col-span-1" value="${values[3]}" />
+          <input placeholder="Period" class="border p-2 col-span-1" value="${values[4]}" />
+          <input placeholder="Price" class="border p-2 col-span-1" value="${values[5]}" />
+        `;
+        container.appendChild(div);
+        entryCount++;
+        toggleShipperInputs();
       }
     }
 
